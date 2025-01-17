@@ -23,7 +23,7 @@ static const char KEYPAD[4][4] = {
 // Definição do pino do buzzer
 #define BUZZER_PIN  21
 
-// Frequência desejada para o buzzer em Hz
+// Frequência desejada para o buzzer   em Hz
 #define BUZZER_FREQ 2000.0f
 
 // Inicializa todos os pinos necessários (teclado, LEDs, buzzer)
@@ -44,3 +44,37 @@ void init_pins(void) {
         gpio_set_dir(COL_PINS[i], GPIO_OUT);
         gpio_put(COL_PINS[i], 0);
     }
+
+    // -- LEDs --
+    gpio_init(LED_GREEN);
+    gpio_set_dir(LED_GREEN, GPIO_OUT);
+    gpio_put(LED_GREEN, 0);
+
+    gpio_init(LED_BLUE);
+    gpio_set_dir(LED_BLUE, GPIO_OUT);
+    gpio_put(LED_BLUE, 0);
+
+    gpio_init(LED_RED);
+    gpio_set_dir(LED_RED, GPIO_OUT);
+    gpio_put(LED_RED, 0);
+
+    // -- Buzzer (via PWM) --
+    gpio_set_function(BUZZER_PIN, GPIO_FUNC_PWM);
+
+    uint slice_num = pwm_gpio_to_slice_num(BUZZER_PIN);
+
+    uint32_t f_sys = clock_get_hz(clk_sys);  
+
+    float divider = 64.0f;
+    uint32_t top = (uint32_t)( (float)f_sys / (divider * BUZZER_FREQ) + 0.5f ) - 1;
+    pwm_config config = pwm_get_default_config();
+
+    pwm_config_set_clkdiv(&config, divider);
+
+    pwm_config_set_wrap(&config, top);
+
+    pwm_init(slice_num, &config, false);
+
+    // Para começar, duty cycle = 0
+    pwm_set_gpio_level(BUZZER_PIN, 0);
+}
