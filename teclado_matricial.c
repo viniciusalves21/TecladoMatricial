@@ -23,7 +23,7 @@ static const char KEYPAD[4][4] = {
 // Definição do pino do buzzer
 #define BUZZER_PIN  21
 
-// Frequência desejada para o buzzer em Hz
+// Frequência desejada para o buzzer   em Hz
 #define BUZZER_FREQ 2000.0f
 
 // Inicializa todos os pinos necessários (teclado, LEDs, buzzer)

@@ -47,7 +47,7 @@ pico_enable_stdio_usb(teclado_matricial 0)
 # Add the standard library to the build
 target_link_libraries(teclado_matricial
         pico_stdlib
-        hardware_pwm
+        hardware_pwm 
         hardware_clocks
         )
 
