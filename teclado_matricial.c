@@ -2,6 +2,8 @@
 #include "pico/stdlib.h"
 #include "hardware/pwm.h"
 #include "hardware/clocks.h"
+#include "pico/bootrom.h"
+
 
 // Definição dos pinos das linhas e colunas do teclado
 static const uint ROW_PINS[4] = {8, 7, 6, 5};   // R1, R2, R3, R4
@@ -171,10 +173,7 @@ int main() {
                     beep_buzzer();
                     break;
                 case '*':
-                    // Exemplo: caso queira entrar em modo BOOTSEL
-                    // #include "pico/bootrom.h"
-                    // reset_usb_boot(0,0);
-                    // break;
+                    reset_usb_boot(0,0);
                 default:
                     break;
             }
