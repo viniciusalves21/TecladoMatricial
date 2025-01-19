@@ -78,3 +78,115 @@ void init_pins(void) {
     // Para começar, duty cycle = 0
     pwm_set_gpio_level(BUZZER_PIN, 0);
 }
+
+// Retorna a tecla pressionada ou 0 se nenhuma for pressionada
+char read_keypad(void) {
+    for (int col = 0; col < 4; col++) {
+        // Coloca a coluna atual em nível alto
+        gpio_put(COL_PINS[col], 1);
+
+        // Verifica as linhas
+        for (int row = 0; row < 4; row++) {
+            if (gpio_get(ROW_PINS[row])) {
+                sleep_ms(10);
+                // Checa novamente para evitar flutuações
+                if (gpio_get(ROW_PINS[row])) {
+                    gpio_put(COL_PINS[col], 0);
+                    return KEYPAD[row][col];
+                }
+            }
+        }
+        // Retorna a coluna para nível baixo
+        gpio_put(COL_PINS[col], 0);
+    }
+    return 0;
+}
+
+// Liga ou desliga todos os LEDs (1 = liga, 0 = desliga)
+void set_all_leds(bool state) {
+    gpio_put(LED_GREEN, state);
+    gpio_put(LED_BLUE, state);
+    gpio_put(LED_RED, state);
+}
+
+// Emite um beep usando PWM por ~100ms
+void beep_buzzer(void) {
+    uint slice_num = pwm_gpio_to_slice_num(BUZZER_PIN);
+
+    uint16_t top = pwm_hw->slice[slice_num].top;
+    uint16_t level = top / 2;  // 50%
+
+    // Ativa a saída PWM
+    pwm_set_enabled(slice_num, true);
+
+    // Define o duty cycle
+    pwm_set_gpio_level(BUZZER_PIN, level);
+
+    // Toca por 100 ms
+    sleep_ms(100);
+
+    // Desliga o PWM para silenciar
+    pwm_set_enabled(slice_num, false);
+
+    pwm_set_gpio_level(BUZZER_PIN, 0);
+}
+
+// Programa principal
+int main() {
+    init_pins();
+    printf("Iniciando leitura do Teclado 4x4...\n");
+
+    while (true) {
+        // Lê a tecla pressionada
+        char key = read_keypad();
+        
+        // Se houver tecla pressionada, faz o tratamento
+        if (key != 0) {
+            printf("Tecla pressionada: %c\n", key);
+
+            // Desliga todos LEDs antes de acender somente o escolhido
+            gpio_put(LED_GREEN, 0);
+            gpio_put(LED_BLUE, 0);
+            gpio_put(LED_RED, 0);
+
+            switch (key) {
+                case 'A':
+                    // Acende LED vermelho
+                    gpio_put(LED_RED, 1);
+                    break;
+                case 'B':
+                    // Acende LED azul
+                    gpio_put(LED_BLUE, 1);
+                    break;
+                case 'C':
+                    // Acende LED verde
+                    gpio_put(LED_GREEN, 1);
+                    break;
+                case 'D':
+                    // Acende todos os LEDs
+                    set_all_leds(true);
+                    break;
+                case '#':
+                    // Emite um beep por PWM
+                    beep_buzzer();
+                    break;
+                case '*':
+                    // Exemplo: caso queira entrar em modo BOOTSEL
+                    // #include "pico/bootrom.h"
+                    // reset_usb_boot(0,0);
+                    // break;
+                default:
+                    break;
+            }
+
+            // Espera até a tecla ser solta para evitar repetição contínua
+            while (read_keypad() != 0) {
+                tight_loop_contents();
+            }
+        }
+
+        // Pequena pausa
+        sleep_ms(50);
+    }
+    return 0;
+}
